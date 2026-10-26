@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Endek Ayuwindy Bali - Web-Based ERP Prototype</title>
+  <meta name="description" content="Integrated Order-to-Cash ERP Prototype for Endek Ayuwindy Bali (Singaraja). Features sales custom orders, production workflow, inventory stock card, and financial ledger.">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3 & Bootstrap Icons via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <!-- Custom Stylesheet with Balinese Textile Aesthetic -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- App Layout -->
+  <div id="app-layout">
+    <!-- Backdrop for mobile sidebar toggle -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon">
+          <i class="bi bi-flower1"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Ayuwindy</h1>
+          <small>Endek ERP Bali</small>
+        </div>
+      </div>
+
+      <!-- Dynamic Role-Filtered Menu Items -->
+      <nav class="sidebar-menu" id="sidebar-menu-items">
+        <!-- Rendered by router.js based on role -->
+      </nav>
+
+      <!-- Sidebar User Profile Info & Logout -->
+      <div class="sidebar-footer">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2 overflow-hidden">
+            <div class="user-avatar current-user-avatar">A</div>
+            <div class="overflow-hidden">
+              <div class="user-name text-white text-truncate current-user-name">User Name</div>
+              <span class="user-role-badge current-user-role">Role</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-light border-0 logout-btn" title="Logout">
+            <i class="bi bi-box-arrow-right fs-5"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div id="main-wrapper">
+      <!-- Topbar Header -->
+      <header id="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle-btn" id="sidebar-toggle" aria-label="Toggle navigation">
+            <i class="bi bi-list"></i>
+          </button>
+          <div class="page-breadcrumb" id="topbar-breadcrumb">
+            Dashboard
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="user-profile-badge d-none d-sm-flex">
+            <div class="user-avatar current-user-avatar">A</div>
+            <div class="user-info">
+              <div class="user-name current-user-name">User Name</div>
+              <span class="user-role-badge current-user-role">Role</span>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 logout-btn">
+            <i class="bi bi-box-arrow-right"></i>
+            <span class="d-none d-md-inline">Logout</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic Page Content Container -->
+      <main id="main-content">
+        <!-- Injected by router handlers -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Global Floating Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- CDN Dependencies: Bootstrap 5.3 & Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <!-- Script tags in exact required order (PRD Section 11):
+       utils -> db -> seed -> services -> auth -> pages -> router -->
+  <script src="js/utils.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/seed.js"></script>
+
+  <!-- Services -->
+  <script src="js/services/salesService.js"></script>
+  <script src="js/services/inventoryService.js"></script>
+  <script src="js/services/productionService.js"></script>
+  <script src="js/services/financeService.js"></script>
+
+  <!-- Authentication & Roles -->
+  <script src="js/auth.js"></script>
+
+  <!-- Pages -->
+  <script src="js/pages/login.js"></script>
+  <script src="js/pages/dashboard.js"></script>
+  <script src="js/pages/sales.js"></script>
+  <script src="js/pages/inventory.js"></script>
+  <script src="js/pages/production.js"></script>
+  <script src="js/pages/finance.js"></script>
+  <script src="js/pages/settings.js"></script>
+
+  <!-- Router & Initialization -->
+  <script src="js/router.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 1. Seed database if not yet seeded
+      db.seedIfEmpty();
+
+      // 2. Mobile Sidebar toggle listeners
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      const toggleBtn = document.getElementById('sidebar-toggle');
+
+      function toggleSidebar() {
+        sidebar.classList.toggle('show');
+        backdrop.classList.toggle('show');
+      }
+
+      if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+      if (backdrop) backdrop.addEventListener('click', toggleSidebar);
+
+      // 3. Logout Buttons
+      document.querySelectorAll('.logout-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          utils.showConfirmModal('Confirm Logout', 'Are you sure you want to log out of the ERP system?', function() {
+            auth.logout();
+          });
+        });
+      });
+
+      // 4. Register all application routes (PRD Section 7)
+      router.addRoute('#/login', pageLogin, 'Sign In');
+      router.addRoute('#/dashboard', pageDashboard, 'Dashboard', [{ label: 'Dashboard', link: '#/dashboard' }]);
+
+      // Sales Routes
+      router.addRoute('#/sales/customers', pageSalesCustomers, 'Customers', [
+        { label: 'Sales', link: '#/sales/orders' }, { label: 'Customers', link: '#/sales/customers' }
+      ]);
+      router.addRoute('#/sales/orders', pageSalesOrders, 'Sales Orders', [
+        { label: 'Sales', link: '#/sales/orders' }, { label: 'Orders', link: '#/sales/orders' }
+      ]);
+      router.addRoute('#/sales/orders/new', pageSalesOrderNew, 'New Custom Order', [
+        { label: 'Sales', link: '#/sales/orders' }, { label: 'New Custom Order', link: '#/sales/orders/new' }
+      ]);
+      router.addRoute('#/sales/orders/:id', pageSalesOrderDetail, 'Order Details & Traceability', [
+        { label: 'Sales', link: '#/sales/orders' }, { label: 'Order Details', link: '' }
+      ]);
+      router.addRoute('#/sales/deliveries', pageSalesDeliveries, 'Deliveries', [
+        { label: 'Sales', link: '#/sales/orders' }, { label: 'Deliveries', link: '#/sales/deliveries' }
+      ]);
+
+      // Inventory Routes
+      router.addRoute('#/inventory/materials', pageInventoryMaterials, 'Raw Materials', [
+        { label: 'Inventory', link: '#/inventory/materials' }, { label: 'Materials Master', link: '#/inventory/materials' }
+      ]);
+      router.addRoute('#/inventory/stock-in', pageInventoryStockIn, 'Receive Material', [
+        { label: 'Inventory', link: '#/inventory/materials' }, { label: 'Stock In', link: '#/inventory/stock-in' }
+      ]);
+      router.addRoute('#/inventory/stock-card/:materialId', pageInventoryStockCard, 'Stock Card Ledger', [
+        { label: 'Inventory', link: '#/inventory/materials' }, { label: 'Stock Card', link: '' }
+      ]);
+      router.addRoute('#/inventory/stock-count', pageInventoryStockCount, 'Stock Count Audit', [
+        { label: 'Inventory', link: '#/inventory/materials' }, { label: 'Audit Count', link: '#/inventory/stock-count' }
+      ]);
+
+      // Production Routes
+      router.addRoute('#/production/orders', pageProductionOrders, 'Production Pipeline', [
+        { label: 'Production', link: '#/production/orders' }, { label: 'Workshop Orders', link: '#/production/orders' }
+      ]);
+      router.addRoute('#/production/orders/:id', pageProductionDetail, 'Production Work Order', [
+        { label: 'Production', link: '#/production/orders' }, { label: 'Work Order Workshop', link: '' }
+      ]);
+
+      // Finance Routes
+      router.addRoute('#/finance/invoices', pageFinanceInvoices, 'Invoices', [
+        { label: 'Finance', link: '#/finance/invoices' }, { label: 'Invoices', link: '#/finance/invoices' }
+      ]);
+      router.addRoute('#/finance/payments', pageFinancePayments, 'Payment Receipts', [
+        { label: 'Finance', link: '#/finance/invoices' }, { label: 'Payments', link: '#/finance/payments' }
+      ]);
+      router.addRoute('#/finance/transactions', pageFinanceTransactions, 'General Ledger', [
+        { label: 'Finance', link: '#/finance/invoices' }, { label: 'Financial Transactions', link: '#/finance/transactions' }
+      ]);
+      router.addRoute('#/finance/profit', pageFinanceProfit, 'Order Profitability', [
+        { label: 'Finance', link: '#/finance/invoices' }, { label: 'Profit Analysis', link: '#/finance/profit' }
+      ]);
+
+      // Settings (Owner)
+      router.addRoute('#/settings', pageSettings, 'Demo Settings', [
+        { label: 'System', link: '#/settings' }, { label: 'Demo Environment', link: '#/settings' }
+      ]);
+
+      // 5. Start router
+      router.init();
+    });
+  </script>
+</body>
+</html>
